@@ -16,3 +16,7 @@ v1.0
 
 Original game :
 	- http://helmet.kafuka.org/
+
+Ported from:  
+	- https://github.com/Cid2mizard/100_Boxes_NX
+	- All the credits to the original author (Cid2mizard)
