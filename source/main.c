@@ -1,9 +1,16 @@
-#include <switch.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
+#include <romfs-wiiu.h>
+#include <stdbool.h>
+
+enum inputKeys
+{
+	KEY_A    = (1 << 0), KEY_B     = (1 << 1),
+	KEY_UP   = (1 << 2), KEY_DOWN  = (1 << 3),
+	KEY_LEFT = (1 << 4), KEY_RIGHT = (1 << 5),
+	KEY_PLUS = (1 << 6), KEY_TOUCH = (1 << 7),
+};
 
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
@@ -18,8 +25,9 @@ SDL_Window * 	window;
 SDL_Renderer * 	renderer;
 SDL_Surface *	surface;
 
-touchPosition Stylus;
-u32 kDown;
+uint32_t kDown;
+uint32_t touch_x;
+uint32_t touch_y;
 
 typedef struct 
 {
@@ -30,20 +38,57 @@ typedef struct
 images;
 images background, sprite[3];
 
-u16 level_courant[MAX_TILEX*MAX_TILEY];
-u8 colonnes, lignes;
-u8 compteur;
+uint16_t level_courant[MAX_TILEX*MAX_TILEY];
+uint8_t colonnes, lignes;
+uint8_t compteur;
 
-u8 CASE_X, CASE_Y;
-u8 TILE_X, TILE_Y;
+uint8_t CASE_X, CASE_Y;
+uint8_t TILE_X, TILE_Y;
+
+
+void SDL_InitInput()
+{
+	for (int i = 0; i < SDL_NumJoysticks(); i++)
+	{
+		if (SDL_JoystickOpen(i) == NULL)
+		{
+			printf("SDL_JoystickOpen: %s\n", SDL_GetError());
+			SDL_Quit();
+			return;
+		}
+	}
+}
+
+void SDL_ScanInput()
+{
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+	{
+		kDown = 0;
+		if (event.type == SDL_JOYBUTTONDOWN)
+		{
+			kDown |= ((event.jbutton.button == 0)? KEY_A : 0);
+			kDown |= ((event.jbutton.button == 1)? KEY_B : 0);
+			kDown |= ((event.jbutton.button == 13)? KEY_UP : 0);
+			kDown |= ((event.jbutton.button == 15)? KEY_DOWN : 0);
+			kDown |= ((event.jbutton.button == 12)? KEY_LEFT : 0);
+			kDown |= ((event.jbutton.button == 14)? KEY_RIGHT : 0);
+			kDown |= ((event.jbutton.button == 10)? KEY_PLUS : 0);
+		}
+		if (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERMOTION)
+		{
+			kDown |= KEY_TOUCH;
+			touch_y = event.tfinger.y * 720;
+			touch_x = event.tfinger.x * 1280;
+		}
+	}
+}
+
 
 //STYLUS
-bool DowntouchInBox(touchPosition touch, int x1, int y1, int x2, int y2)
+bool DowntouchInBox(int x1, int y1, int x2, int y2)
 {
-	int tx=touch.px;
-	int ty=touch.py;
-
-	if (kDown & KEY_TOUCH && tx > x1 && tx < x2 && ty > y1 && ty < y2)
+	if (kDown & KEY_TOUCH && touch_x > x1 && touch_x < x2 && touch_y > y1 && touch_y < y2)
 	{
 		return true;
 	}
@@ -72,11 +117,11 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int Srcx, int Srcy, int 
 }
 
 
-void Affiche_trois_chiffres(u16 valeur, u16 posx, u16 posy)
+void Affiche_trois_chiffres(uint16_t valeur, uint16_t posx, uint16_t posy)
 {
-	u8 unite = 0;
-	u8 dizaine = 0;
-	u16 centaine = 0;
+	uint8_t unite = 0;
+	uint8_t dizaine = 0;
+	uint16_t centaine = 0;
 
 	if (valeur < 10)
 	{
@@ -154,10 +199,10 @@ void debloqueChoix()
 
 void manageInput()
 {
-	if (DowntouchInBox(Stylus, 595, 98, 595 + 600, 98 + 600))
+	if (DowntouchInBox(595, 98, 595 + 600, 98 + 600))
 	{
-		TILE_X = (Stylus.px-595)/TILE_SIZEX;
-		TILE_Y = (Stylus.py-98)/TILE_SIZEY;
+		TILE_X = (touch_x-595)/TILE_SIZEX;
+		TILE_Y = (touch_y-98)/TILE_SIZEY;
 
 		if ((compteur == 0) || (level_courant[TILE_X*MAX_TILEY + TILE_Y] == 2))
 		{
@@ -205,18 +250,18 @@ void manageInput()
 	}
 }
 
-
 int main(int argc, char **argv)
 {
 	// Initialize
 	SDL_Init(SDL_INIT_EVERYTHING);
+	SDL_InitInput();
 	IMG_Init(IMG_INIT_PNG);
 	romfsInit();
 
     	// Create an SDL window & renderer
 	window = SDL_CreateWindow("Main-Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
     	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
- 
+
 	// Create bg texture:
 	surface = IMG_Load("romfs:/resources/main.png");
 	background.texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -238,12 +283,10 @@ int main(int argc, char **argv)
 	SDL_FreeSurface(surface);
 
 	// Game loop:
-	while (appletMainLoop())
+	while (1)
 	{
 		// Get inputs
-		hidScanInput();
-		kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-		hidTouchRead(&Stylus, 0);
+		SDL_ScanInput();
 
 		manageInput();
 
@@ -255,5 +298,6 @@ int main(int argc, char **argv)
 	}
 	
 	SDL_Quit();				// SDL cleanup
+	romfsExit();			// Exit romfs
 	return EXIT_SUCCESS; 	// Clean exit to HBMenu
 }

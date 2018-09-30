@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+  <name>100 Boxes WiiU</name>
+  <coder>Cid2mizard</coder>
+  <version>1.0</version>
+  <release_date>20180921230000</release_date>
+  <short_description>A simple yet challenging puzzle game.</short_description> 
+  <long_description>100 Boxes WiiU is a simple yet challenging puzzle game.
+
+Gameplay: - Fill all the boxes of a 10x10 grid. If you move horizontally or vertically you must skip 2 boxes. If you move diagonally you must skip 1 box.
+
+Controls : - Touch or D-pad + A : Discover Case - B : New Game - Plus : Exit
+
+Original game : - http://helmet.kafuka.org/
+
+Changelog :
+1.0
+
+Initial Release
+
+[Ported to WiiU by rw-r-r-0644, all the credits to the original author, Cid2mizard]
+</long_description> 
+</app>

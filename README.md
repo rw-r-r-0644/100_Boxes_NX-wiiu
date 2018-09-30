@@ -1,6 +1,6 @@
-# 100 Boxes NX v1.0 By Cid2mizard
+# 100 Boxes WiiU v1.0 By Cid2mizard
 
-100 Boxes NX is a simple yet challenging puzzle game.
+100 Boxes WiiU is a simple yet challenging puzzle game.
 
 Gameplay:
 	- Fill all the boxes of a 10x10 grid. If you move horizontally or vertically you must skip 2 boxes. If you move diagonally you must skip 1 box.
@@ -16,3 +16,7 @@ v1.0
 
 Original game :
 	- http://helmet.kafuka.org/
+
+Ported by rw-r-r-0644 from:  
+	- https://github.com/Cid2mizard/100_Boxes_NX  
+	- All the credits to the original author (Cid2mizard)  
