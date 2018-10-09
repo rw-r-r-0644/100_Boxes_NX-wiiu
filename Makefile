@@ -11,20 +11,20 @@ TARGET		:=	100_Boxes
 SOURCES		:=	source
 INCLUDES	:=	
 ROMFS		:=	romfs
+include $(WUT_ROOT)/share/romfs-wiiu.mk
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 CFLAGS		+=	$(INCLUDES)
 CXXFLAGS	+=	$(INCLUDES)
-LDFLAGS		+=	$(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) \
+LDFLAGS		+=	$(WUT_NEWLIB_LDFLAGS) $(WUT_STDCPP_LDFLAGS) $(ROMFS_LDFLAGS) \
 				-lSDL2_ttf -lfreetype -lpng -lSDL2_gfx -lSDL2_image -lSDL2 -ljpeg -lzip \
 				-lcoreinit -lvpad -lsndcore2 -lsysapp -lproc_ui -lgx2 -lgfd -lzlib125 -lwhb
 
 #---------------------------------------------------------------------------------
 # get a list of objects
 #---------------------------------------------------------------------------------
-include $(DEVKITPRO)/portlibs/ppc/share/romfs-wiiu.mk
 CFILES		:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.c))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.cpp))
 SFILES		:=	$(foreach dir,$(SOURCES),$(wildcard $(dir)/*.s))
